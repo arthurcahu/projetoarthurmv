@@ -82,7 +82,7 @@ public class DAO {
 	/** CRUD UPDATE **/
 	//Selecionar o participante
 	public void selecionarParticipante(JavaBeans participante) {
-		String read2 = "select * from Listadeparticipantes where idcon = ?";
+		String read2 = "select * from Listadeparticipantes where idcon = ? order by nome";
 		try {
 			Connection con = conectar ();
 			PreparedStatement pst = con.prepareStatement(read2);

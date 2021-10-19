@@ -10,7 +10,11 @@ function validar() {
 		alert ('PREENCHA O CAMPO NOME')
 		frmAdicionar.nome.focus()
 		return false
-	}  else if (cpf === "") { 
+	} else if (cpf.length > 11 || cpf.length <11) {   
+		alert ('O CPF precisa ter 11 caracteres')
+		frmAdicionar.cpf.focus()
+		return false	
+	} else if (cpf === "") { 
 		alert ('PREENCHA O CAMPO CPF')
 		frmAdicionar.cpf.focus()
 		return false

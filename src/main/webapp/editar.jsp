@@ -19,7 +19,7 @@
 				<td><input type="text" name="nome" class="Caixa1"value =" <%out.print(request.getAttribute("nome"));%>"></td>
 			</tr>
 			<tr>
-				<td><input type="text" name="cpf" class="Caixa1" value ="<%out.print(request.getAttribute("cpf"));%>"></td>
+				<td><input type="number" name="cpf" class="Caixa1" value ="<%out.print(request.getAttribute("cpf"));%>"></td>
 			</tr>
 			<tr>
 				<td><input type="text" name="contribuicao" class="Caixa1" value ="<%out.print(request.getAttribute("contribuicao"));%>">

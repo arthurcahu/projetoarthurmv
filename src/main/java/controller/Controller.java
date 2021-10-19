@@ -6,12 +6,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
+import java.awt.*;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sound.midi.SysexMessage;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 
 import static javax.swing.JOptionPane.showMessageDialog;
@@ -33,7 +37,7 @@ public class Controller extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String action = request.getServletPath();
-		System.out.println(action);
+		
 		if (action.equals("/main")) {
 			participantes(request, response);
 
@@ -73,32 +77,48 @@ public class Controller extends HttpServlet {
 			throws ServletException, IOException {
 		
 		Boolean erro = false;
-		String read2 = "select count(*) from Listadeparticipantes where cpf = ?";
 		try {
+			String read = "select count(*) from Listadeparticipantes where cpf = ?";
 			Connection con = dao.conectar ();
-			PreparedStatement pst = con.prepareStatement(read2);
+			PreparedStatement pst = con.prepareStatement(read);
 			pst.setString(1, request.getParameter("cpf"));
 			
 			ResultSet rs = pst.executeQuery();
 			rs.next();
 			if (rs.getInt(1) > 0){
+				erro = false;
 				throw new Exception("CPF já cadastrado.");
+			}else {
+				erro = true;
 			}
 			con.close();
 			
+			String read2 = "select count(*) from Listadeparticipantes where upper(contribuicao) = upper(?)";
+			Connection con2 = dao.conectar ();
+			PreparedStatement pst2 = con2.prepareStatement(read2);
+			pst2.setString(1, request.getParameter("contribuicao"));
+			
+			ResultSet rs2 = pst2.executeQuery();
+			rs2.next();
+			if (rs2.getInt(1) > 0){
+				erro = false;
+				throw new Exception("Outra pessoa já contribuiu com este item.");
+			}else {
+				erro = true;
+			}
+			con2.close();	
 
 		} catch (Exception e) {
-			System.out.println(e);
-			JOptionPane.showMessageDialog(null,e,"Janela", JOptionPane.ERROR_MESSAGE);
+			setWarningMsg(e.getMessage());
 		}
-		
-		
+	
 		// setar as variáveis JavaBeans
 		participantes.setNome(request.getParameter("nome"));
 		participantes.setCPF(request.getParameter("cpf"));
 		participantes.setContribuicao(request.getParameter("contribuicao"));
-		// invocar o método inserirParticipante passando o objeto participantes
+		
 		if (erro) {
+			// invocar o método inserirParticipante passando o objeto participantes
 			dao.inserirParticipante(participantes);
 		}
 		// redirecionar para o documento cafemv.jsp
@@ -132,37 +152,56 @@ public class Controller extends HttpServlet {
 	
 	protected void editarParticipantes(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		
-	/*	String read2 = "select count(*) from Listadeparticipantes where cpf = ? and idcon <> ?";
+		Boolean erro = false;
+		String read = "select count(*) from Listadeparticipantes where cpf = ? and idcon <> ?";
 		try {
 			Connection con = dao.conectar ();
-			PreparedStatement pst = con.prepareStatement(read2);
+			PreparedStatement pst = con.prepareStatement(read);
 			pst.setString(1, request.getParameter("cpf"));
 			pst.setString(2, request.getParameter("idcon"));
 			
 			ResultSet rs = pst.executeQuery();
 			rs.next();
 			if (rs.getInt(1) > 0){
+				erro = false;
 				throw new Exception("CPF já cadastrado.");
+			}else {
+				erro = true;
 			}
 			con.close();
 		
+			String read2 = "select count(*) from Listadeparticipantes where upper(contribuicao) = upper(?) and idcon <> ?";
+			Connection con2 = dao.conectar ();
+			PreparedStatement pst2 = con2.prepareStatement(read2);
+			pst2.setString(1, request.getParameter("contribuicao"));
+			pst2.setString(2, request.getParameter("idcon"));
+			
+			ResultSet rs2 = pst2.executeQuery();
+			rs2.next();
+			if (rs2.getInt(1) > 0){
+				erro = false;
+				throw new Exception("Outra pessoa já contribuiu com este item.");
+			}else {
+				erro = true;
+			}
+			con2.close();
 		} catch (Exception e) {
-			System.out.println(e);
-			JOptionPane.showMessageDialog(null,e,"Janela", JOptionPane.INFORMATION_MESSAGE);
+			setWarningMsg(e.getMessage());
 		}
 		
-		*/
-			// Setar as variáveis JavaBeans
-			participantes.setIdcon(request.getParameter("idcon"));
-			participantes.setNome(request.getParameter("nome"));
-			participantes.setCPF(request.getParameter("cpf"));
-			participantes.setContribuicao(request.getParameter("contribuicao"));
+		// Setar as variáveis JavaBeans
+		participantes.setIdcon(request.getParameter("idcon"));
+		participantes.setNome(request.getParameter("nome"));
+		participantes.setCPF(request.getParameter("cpf"));
+		participantes.setContribuicao(request.getParameter("contribuicao"));
+		
+		if (erro) {
 			// Executar o método alterarParticipante
 			dao.alterarParticipante(participantes);
-			// Redirecionar para o documento cafemv.jsp (atualizando as alterações)
-			response.sendRedirect("main");
-			
+		}
+		// Redirecionar para o documento cafemv.jsp (atualizando as alterações)
+		response.sendRedirect("main");
+		
 	}
 
 	// Remover um participante
@@ -177,4 +216,13 @@ public class Controller extends HttpServlet {
 		// Redirecionar para o documento cafemv.jsp (atualizando as alterações)
 		response.sendRedirect("main");
 	}
+
+	
+	public static void setWarningMsg(String text){
+	    JOptionPane optionPane = new JOptionPane(text,JOptionPane.ERROR_MESSAGE);
+	    JDialog dialog = optionPane.createDialog("Atenção");
+	    dialog.setAlwaysOnTop(true);
+	    dialog.setVisible(true);
+	}
+	
 }
